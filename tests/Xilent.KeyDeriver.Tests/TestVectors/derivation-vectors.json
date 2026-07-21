@@ -1,0 +1,20 @@
+[
+  {
+    "mkfHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f000102030405060708090a0b0c0d0e0f",
+    "memorySecret": "public test memory secret",
+    "info": "cryptotest:test:v1",
+    "expected": "75f76fdedf2d5384a93c94440c9f6a731ecb72ea896970811be909a7a61a3a37"
+  },
+  {
+    "mkfHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f000102030405060708090a0b0c0d0e0f",
+    "memorySecret": "caf\u00e9",
+    "info": "backup:unicode:v1",
+    "expected": "ccf82bb35d3199fa640611c784bc9a6e72f12ea866e2754660e4c094c24a20a4"
+  },
+  {
+    "mkfHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f000102030405060708090a0b0c0d0e0f",
+    "memorySecret": " memory secret ",
+    "info": "data:leading-trailing:v1",
+    "expected": "d48efd8f7cb04e56796ba710ddef01f072b5930b1af457b0afb340a4450e92e8"
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "veraCryptExecutablePath": "C:\\Program Files\\VeraCrypt\\VeraCrypt.exe",
+  "vaultContainerPathBase64": "RTpcVmF1bHRzXFhpbGVudC12YXVsdC5oYw==",
+  "nf1PathBase64": "QzpcS2V5ZmlsZXNcTkYx",
+  "vaultMountLetter": "Q",
+  "mkfRelativeDirectory": "Keys",
+  "vaultMarkerFile": ".Xilent-vault",
+  "vaultMarkerValue": "Xilent-VAULT-1",
+  "clipboardTimeoutSeconds": 15,
+  "mountPollingTimeoutSeconds": 60,
+  "startWithWindows": false,
+  "showMountInformation": true
+}
