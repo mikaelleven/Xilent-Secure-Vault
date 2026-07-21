@@ -23,6 +23,35 @@ Alpha 1 functionality works with a manually mounted Vault: open the form, choose
 
 Alpha 2 runs in the system tray. Double-clicking the icon or choosing **Unlock Data Key** mounts the Vault when needed, waits for its exact marker file, then opens the derivation form. The tray menu also mounts, unmounts, opens the MKF directory, opens Settings, and exits. Red means locked, green means validated mounted Vault, and yellow means an error or another volume at the configured drive letter.
 
+## Development and publishing
+
+The repository includes a local .NET 10 SDK in `.tools/dotnet`. In PowerShell, activate it once per shell; the default launch profile then opens the derivation form:
+
+```powershell
+. .\scripts\Use-LocalDotNet.ps1
+dotnet run --project .\src\Xilent.VaultAgent
+```
+
+If the current PowerShell session cannot resolve the local SDK, use it directly once:
+
+```powershell
+& .\.tools\dotnet\dotnet.exe run --project .\src\Xilent.VaultAgent
+```
+
+Build the solution with:
+
+```powershell
+dotnet build .\Xilent.VaultAgent.sln -c Release
+```
+
+Create the compact framework-dependent single-file release with:
+
+```powershell
+dotnet publish .\src\Xilent.VaultAgent -p:PublishProfile=PortableSingleFile -o .\publish
+```
+
+The published executable needs the .NET 10 Windows Desktop Runtime on the target computer. It avoids bundling a private runtime, which keeps the output and per-process memory footprint lower than a self-contained release. Do not enable trimming for this WinForms application without a dedicated compatibility pass. For faster cold startup at the cost of a larger output, add `-p:PublishReadyToRun=true` to the publish command.
+
 ## Commands
 
 ```text
