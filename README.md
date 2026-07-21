@@ -44,13 +44,21 @@ Build the solution with:
 dotnet build .\Xilent.VaultAgent.sln -c Release
 ```
 
-Create the compact framework-dependent single-file release with:
+Three single-file publishing profiles are available:
+
+| Profile | Purpose | Command |
+| --- | --- | --- |
+| `SizeOptimizedSingleFile` | Smallest output and lowest practical baseline memory use. Requires .NET 10 Windows Desktop Runtime. | `dotnet publish .\src\Xilent.VaultAgent -p:PublishProfile=SizeOptimizedSingleFile -o .\publish\size` |
+| `ColdStartSingleFile` | Faster cold start through ReadyToRun. Requires .NET 10 Windows Desktop Runtime and produces a larger file. | `dotnet publish .\src\Xilent.VaultAgent -p:PublishProfile=ColdStartSingleFile -o .\publish\cold-start` |
+| `SelfContainedSingleFile` | Simplest distribution: no separately installed .NET Desktop Runtime. Produces the largest file. | `dotnet publish .\src\Xilent.VaultAgent -p:PublishProfile=SelfContainedSingleFile -o .\publish\self-contained` |
+
+For example, create the compact profile with:
 
 ```powershell
-dotnet publish .\src\Xilent.VaultAgent -p:PublishProfile=PortableSingleFile -o .\publish
+dotnet publish .\src\Xilent.VaultAgent -p:PublishProfile=SizeOptimizedSingleFile -o .\publish\size
 ```
 
-The published executable needs the .NET 10 Windows Desktop Runtime on the target computer. It avoids bundling a private runtime, which keeps the output and per-process memory footprint lower than a self-contained release. Do not enable trimming for this WinForms application without a dedicated compatibility pass. For faster cold startup at the cost of a larger output, add `-p:PublishReadyToRun=true` to the publish command.
+The framework-dependent profiles avoid bundling a private runtime, which keeps output and per-process memory use lower than the self-contained profile. Do not enable trimming for this WinForms application without a dedicated compatibility pass.
 
 ## Commands
 

@@ -6,3 +6,4 @@ config.json
 *.mkf
 .tools/
 publish/
+.nuget/

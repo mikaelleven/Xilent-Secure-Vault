@@ -6,3 +6,11 @@ if (-not (Test-Path -LiteralPath (Join-Path $localDotNet 'dotnet.exe'))) {
 }
 
 $env:PATH = "$localDotNet;$env:PATH"
+
+$workspaceNuGet = Join-Path $solutionRoot '.nuget'
+$workspaceTemp = Join-Path $workspaceNuGet 'temp'
+New-Item -ItemType Directory -Force -Path $workspaceTemp | Out-Null
+$env:NUGET_PACKAGES = Join-Path $workspaceNuGet 'packages'
+$env:NUGET_HTTP_CACHE_PATH = Join-Path $workspaceNuGet 'http-cache'
+$env:TEMP = $workspaceTemp
+$env:TMP = $workspaceTemp
