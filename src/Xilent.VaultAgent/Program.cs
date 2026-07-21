@@ -5,13 +5,13 @@ namespace Xilent.VaultAgent;
 internal static class Program
 {
     [STAThread]
-    private static async Task Main(string[] args)
+    private static void Main(string[] args)
     {
         string command = args.FirstOrDefault(argument => argument is "--show" or "--mount" or "--unmount" or "--settings") ?? "--show";
         using SingleInstanceService singleInstance = new();
         if (!singleInstance.IsPrimaryInstance)
         {
-            await SingleInstanceService.SendCommandAsync(command);
+            SingleInstanceService.SendCommandAsync(command).GetAwaiter().GetResult();
             return;
         }
 

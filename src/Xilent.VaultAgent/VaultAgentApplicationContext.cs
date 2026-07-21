@@ -15,7 +15,7 @@ public sealed class VaultAgentApplicationContext : ApplicationContext
     private readonly NotifyIcon _notifyIcon;
     private readonly System.Windows.Forms.Timer _stateTimer;
     private readonly VeraCryptService _veraCryptService;
-    private readonly SynchronizationContext _uiContext;
+    private readonly Control _commandDispatcher = new();
     private readonly Icon _lockedIcon;
     private readonly Icon _mountedIcon;
     private readonly Icon _warningIcon;
@@ -26,7 +26,8 @@ public sealed class VaultAgentApplicationContext : ApplicationContext
 
     public VaultAgentApplicationContext()
     {
-        _uiContext = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
+        // This handle is created on the application STA thread and is the only route for pipe commands to reach the UI.
+        _commandDispatcher.CreateControl();
         _veraCryptService = new VeraCryptService(_vaultService);
         _lockedIcon = CreateTrayIcon(Color.Firebrick);
         _mountedIcon = CreateTrayIcon(Color.ForestGreen);
@@ -42,14 +43,31 @@ public sealed class VaultAgentApplicationContext : ApplicationContext
 
     public void HandleCommand(string command)
     {
-        if (_exiting) return;
-        _uiContext.Post(_ => _ = command.ToLowerInvariant() switch
+        if (_exiting || _commandDispatcher.IsDisposed) return;
+        if (_commandDispatcher.InvokeRequired)
+        {
+            try
+            {
+                _commandDispatcher.BeginInvoke((MethodInvoker)(() => ProcessCommand(command)));
+            }
+            catch (InvalidOperationException)
+            {
+                // The application is closing and can no longer accept commands.
+            }
+            return;
+        }
+        ProcessCommand(command);
+    }
+
+    private void ProcessCommand(string command)
+    {
+        _ = command.ToLowerInvariant() switch
         {
             "--mount" => MountAsync(false),
             "--unmount" => UnmountAsync(),
             "--settings" => OpenSettingsAsync(),
             _ => ShowOrMountAsync()
-        }, null);
+        };
     }
 
     private async Task InitializeAsync()
@@ -165,6 +183,7 @@ public sealed class VaultAgentApplicationContext : ApplicationContext
         _lockedIcon.Dispose();
         _mountedIcon.Dispose();
         _warningIcon.Dispose();
+        _commandDispatcher.Dispose();
         _stateTimer.Dispose();
         ExitThread();
     }
