@@ -51,6 +51,9 @@ A derived key can be used as the password for:
 
 ## 3. Installation and Configuration
 
+> [!NOTE]
+> XSV is a security concept, not a requirement to use specific hardware or software. XVault, VeraCrypt, Bitwarden, USB drives, and the included Python script are practical recommendations only. You may use other storage media, applications, password managers, or key-derivation scripts, provided that you preserve the essential model: securely stored master keys, unique derived keys, documented recovery details, and protected paper copies of the information needed for recovery.
+
 ### Step 1 — Create the Vault
 
 The recommended setup uses an encrypted USB drive, for example with [VeraCrypt](https://www.veracrypt.fr/).
@@ -90,7 +93,9 @@ For the memorized secret, a password manager such as [Bitwarden](https://bitward
 
 ### Step 2 — Use the XVault Application *(optional)*
 
-The **XVault** application is optional but recommended when available. It simplifies day-to-day Vault management, key creation, derivation, and configuration. See [README_App.md](README_App.md) for the current application documentation.
+The **XVault** application is optional but recommended when available. It simplifies day-to-day Vault management, key creation, derivation, and configuration.
+
+If you use XVault, configure the Vault device with an `.xvault` configuration file so the application can identify and work with the intended Vault setup. See [README_App.md](README_App.md) for application and configuration details.
 
 ### Step 3 — Create Master Keys
 
@@ -99,12 +104,6 @@ Create one or more master keys and store them in the Vault as `.mkf` files.
 Use the included Python script, or use the corresponding feature in XVault when it becomes available in the first beta release.
 
 Keep the recoverable information required to recreate important keys as a paper copy in a secure physical location.
-
-### Step 4 — Configure XVault *(optional)*
-
-If you use XVault, configure the Vault device with an `.xvault` configuration file.
-
-This file allows XVault to identify and work with the intended Vault setup.
 
 ## 4. How It Works
 
