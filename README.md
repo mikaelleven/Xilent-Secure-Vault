@@ -6,16 +6,17 @@
 
 **Xilent Secure Vault (XSV)** is a practical model for securely storing sensitive private data. It is designed for security-conscious families, technology enthusiasts, and other advanced users.
 
-Its goal is not to be the most extreme or complex security solution available. Instead, XSV aims for a deliberate balance: strong, sensible protection that remains manageable in everyday life.
+Its goal is not to be the most extreme or complex security solution available. Instead, XSV aims for a deliberate balance: strong, sensible protection that remains manageable in everyday life. In other words, a practical and user-friendly way of achieving strong security.
 
-A core principle is long-term recoverability. Your keys should be possible to recreate in the future—even from paper copies, and even if all current XSV code disappears. The algorithm and implementation details are publicly documented so that a compatible recovery script can be recreated when needed.
+A core principle is **long-term recoverability**. Your keys should be possible to recreate in the future—even from paper copies, and even if all current XSV code disappears. The algorithm and implementation details are _publicly documented_ so that a compatible recovery script can be recreated when needed.
 
 XSV is built around the idea that you stay in control:
-
 - Your sensitive data can remain offline.
 - You do not need to depend on a cloud service.
 - You do not need to preserve complicated digital key backups forever.
 - The most important secrets can be recovered from understandable, documented information.
+
+It's free. It's open source. And it's open for scrutiny. We all deserve some piece of mind, knowing our data is (reasonably) safe.
 
 > [!IMPORTANT]
 > XSV is a security model, not a guarantee against every threat. Use it only after understanding its trade-offs and adapting it to your own risk level.
@@ -25,6 +26,8 @@ XSV is built around the idea that you stay in control:
 ![XSV derived-key flow](docs/images/xsv-derived-keys.png)
 
 A **master key** is kept safely in the Vault. Rather than using it directly, generate a unique **derived key** for every protected object, such as an encrypted backup, archive, or VeraCrypt volume.
+
+A derived key is a deterministic, high-entropy value calculated from a master key, an info string, and a memorized secret. It can be used as a **very strong password** or passphrase without needing to memorize or permanently store the resulting value.
 
 The typical process is:
 
