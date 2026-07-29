@@ -1,6 +1,6 @@
 # Xilent Secure Vault (XSV)
 
-![XSV USB Vault structure](docs/images/xsv-usb-vault-with-decoy.png)
+![XSV USB Vault structure](docs/images/xsv-usb-vault.png)
 
 ## 1. Secure Storage Without Unnecessary Complexity
 
@@ -57,11 +57,13 @@ The recommended setup uses an encrypted USB drive, for example with [VeraCrypt](
 
 A practical layout is:
 
+![XSV USB Vault structure](docs/images/xsv-usb-vault-with-decoy.png)
+
 | Storage area | Recommended size | Purpose |
 |---|---:|---|
-| VeraCrypt outer volume | 200–400 MB | Contains the Decoy volume and hidden Vault volume |
-| Hidden VeraCrypt volume | 20–50 MB | Stores the real sensitive Vault data |
-| Standard USB partition | Remaining space | Normal, unencrypted everyday storage |
+| **Decoy:** VeraCrypt outer volume | 200–400 MB | Contains the Decoy volume and hidden Vault volume |
+| **Vault:** Hidden VeraCrypt volume | 20–50 MB | Stores the real sensitive Vault data |
+| **Normal storage:** Standard USB partition | Remaining space | Normal, unencrypted everyday storage |
 
 You can store a Vault anywhere, but placing it on unencrypted storage reduces its security.
 
