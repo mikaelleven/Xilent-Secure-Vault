@@ -19,6 +19,10 @@ public sealed class VaultAgentApplicationContext : ApplicationContext
     private readonly Icon _lockedIcon;
     private readonly Icon _mountedIcon;
     private readonly Icon _warningIcon;
+    private readonly ToolStripMenuItem _unlockMenuItem = new("Unlock Data Key");
+    private readonly ToolStripMenuItem _mountMenuItem = new("Mount Vault");
+    private readonly ToolStripMenuItem _unmountMenuItem = new("Unmount Vault");
+    private readonly ToolStripMenuItem _openFolderMenuItem = new("Open Vault Folder");
     private AppSettings _settings = new();
     private KeyDeriverForm? _keyDeriverForm;
     private VaultState? _lastVaultState;
@@ -80,13 +84,19 @@ public sealed class VaultAgentApplicationContext : ApplicationContext
     private ContextMenuStrip BuildMenu()
     {
         ContextMenuStrip menu = new();
-        menu.Items.Add("Unlock Data Key", null, async (_, _) => await ShowOrMountAsync());
-        menu.Items.Add("Mount Vault", null, async (_, _) => await MountAsync(true));
-        menu.Items.Add("Unmount Vault", null, async (_, _) => await UnmountAsync());
-        menu.Items.Add("Open Vault Folder", null, (_, _) => OpenVaultFolder());
+        _unlockMenuItem.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+        _unlockMenuItem.Click += async (_, _) => await ShowOrMountAsync();
+        _mountMenuItem.Click += async (_, _) => await MountAsync(true);
+        _unmountMenuItem.Click += async (_, _) => await UnmountAsync();
+        _openFolderMenuItem.Click += (_, _) => OpenVaultFolder();
+        menu.Items.Add(_unlockMenuItem);
+        menu.Items.Add(_mountMenuItem);
+        menu.Items.Add(_unmountMenuItem);
+        menu.Items.Add(_openFolderMenuItem);
         menu.Items.Add("Settings", null, async (_, _) => await OpenSettingsAsync());
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add("Exit", null, (_, _) => Exit());
+        menu.Opening += (_, _) => UpdateMenuState();
         return menu;
     }
 
@@ -98,6 +108,7 @@ public sealed class VaultAgentApplicationContext : ApplicationContext
 
     private async Task MountAsync(bool showOnly)
     {
+        if (_vaultService.GetState(_settings) != VaultState.Mounted && !await EnsureMountConfigurationAsync()) return;
         try
         {
             if (_settings.ShowMountInformation) ShowInformation("VeraCrypt will request the Vault password. Paste H1 into the VeraCrypt password dialog.");
@@ -120,6 +131,11 @@ public sealed class VaultAgentApplicationContext : ApplicationContext
 
     private async Task UnmountAsync()
     {
+        if (!_veraCryptService.HasUsableExecutable(_settings))
+        {
+            await OpenSettingsAsync();
+            if (!_veraCryptService.HasUsableExecutable(_settings)) return;
+        }
         try { await _veraCryptService.UnmountAsync(_settings, CancellationToken.None); MonitorVault(); }
         catch (Exception exception) when (exception is InvalidDataException or InvalidOperationException or Win32Exception) { ShowWarning(exception.Message); }
     }
@@ -132,7 +148,15 @@ public sealed class VaultAgentApplicationContext : ApplicationContext
             StartupService.Apply(_settings.StartWithWindows);
             await _configurationService.SaveAsync(_settings);
             MonitorVault();
+            UpdateMenuState();
         }
+    }
+
+    private async Task<bool> EnsureMountConfigurationAsync()
+    {
+        if (_veraCryptService.HasUsableMountConfiguration(_settings)) return true;
+        await OpenSettingsAsync();
+        return _veraCryptService.HasUsableMountConfiguration(_settings);
     }
 
     private void ShowDeriver()
@@ -153,7 +177,11 @@ public sealed class VaultAgentApplicationContext : ApplicationContext
     private void MonitorVault()
     {
         VaultState state = _vaultService.GetState(_settings);
-        if (_lastVaultState == state) return;
+        if (_lastVaultState == state)
+        {
+            UpdateMenuState();
+            return;
+        }
 
         _notifyIcon.Icon = state switch
         {
@@ -169,6 +197,20 @@ public sealed class VaultAgentApplicationContext : ApplicationContext
             _keyDeriverForm?.VaultRemoved();
         }
         _lastVaultState = state;
+        UpdateMenuState();
+    }
+
+    private void UpdateMenuState()
+    {
+        VaultState state = _vaultService.GetState(_settings);
+        bool mountReady = _veraCryptService.HasUsableMountConfiguration(_settings);
+        bool executableReady = _veraCryptService.HasUsableExecutable(_settings);
+        bool mkfDirectoryAvailable = state == VaultState.Mounted && Directory.Exists(_vaultService.GetMkfDirectory(_settings));
+
+        _unlockMenuItem.Enabled = state == VaultState.Mounted || mountReady;
+        _mountMenuItem.Enabled = state is not (VaultState.Mounted or VaultState.WrongVolume) && mountReady;
+        _unmountMenuItem.Enabled = state == VaultState.Mounted && executableReady;
+        _openFolderMenuItem.Enabled = mkfDirectoryAvailable;
     }
 
     private void Exit()

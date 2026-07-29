@@ -23,7 +23,7 @@ public sealed class SettingsForm : Form
         FormBorderStyle = FormBorderStyle.FixedDialog;
         StartPosition = FormStartPosition.CenterParent;
         MaximizeBox = false; MinimizeBox = false; AutoSize = true; AutoSizeMode = AutoSizeMode.GrowAndShrink;
-        _veraCrypt.Text = settings.VeraCryptExecutablePath ?? string.Empty;
+        _veraCrypt.Text = veraCryptService.DiscoverExecutable(settings) ?? settings.VeraCryptExecutablePath ?? string.Empty;
         _container.Text = settings.VaultContainerPathBase64 is null ? string.Empty : ConfigurationService.DecodePath(settings.VaultContainerPathBase64);
         _nf1.Text = settings.Nf1PathBase64 is null ? string.Empty : ConfigurationService.DecodePath(settings.Nf1PathBase64);
         _letter.Text = settings.VaultMountLetter;

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.Win32;
 using Xilent.VaultAgent.Models;
 
 namespace Xilent.VaultAgent.Services;
@@ -11,10 +12,30 @@ public sealed class VeraCryptService(VaultService vaultService)
         [
             settings.VeraCryptExecutablePath,
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "VeraCrypt", "VeraCrypt.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "VeraCrypt", "VeraCrypt.exe"),
+            Path.Combine(AppContext.BaseDirectory, "VeraCrypt.exe"),
             Path.Combine(AppContext.BaseDirectory, "VeraCrypt", "VeraCrypt.exe")
         ];
-        return candidates.FirstOrDefault(path => !string.IsNullOrWhiteSpace(path) && File.Exists(path));
+        return candidates
+            .Concat(GetRegistryCandidates())
+            .Concat(GetPathCandidates())
+            .FirstOrDefault(IsExistingExecutable);
     }
+
+    public bool HasUsableMountConfiguration(AppSettings settings)
+    {
+        try
+        {
+            ValidateConfiguration(settings);
+            return true;
+        }
+        catch (InvalidDataException)
+        {
+            return false;
+        }
+    }
+
+    public bool HasUsableExecutable(AppSettings settings) => DiscoverExecutable(settings) is not null;
 
     public void ValidateConfiguration(AppSettings settings)
     {
@@ -63,5 +84,40 @@ public sealed class VeraCryptService(VaultService vaultService)
         using Process process = Process.Start(startInfo) ?? throw new InvalidOperationException("VeraCrypt could not be started.");
         await process.WaitForExitAsync(cancellationToken);
         if (vaultService.GetState(settings) == VaultState.Mounted) throw new InvalidOperationException("The Vault could not be unmounted because one or more files are still in use.");
+    }
+
+    private static bool IsExistingExecutable(string? path) =>
+        !string.IsNullOrWhiteSpace(path) && string.Equals(Path.GetFileName(path), "VeraCrypt.exe", StringComparison.OrdinalIgnoreCase) && File.Exists(path);
+
+    private static IEnumerable<string> GetRegistryCandidates()
+    {
+        foreach (string keyPath in new[]
+        {
+            @"SOFTWARE\VeraCrypt",
+            @"SOFTWARE\WOW6432Node\VeraCrypt",
+            @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VeraCrypt"
+        })
+        {
+            using RegistryKey? key = Registry.LocalMachine.OpenSubKey(keyPath);
+            if (key is null) continue;
+            foreach (string valueName in new[] { "InstallDir", "InstallLocation", "DisplayIcon" })
+            {
+                if (key.GetValue(valueName) is not string value || string.IsNullOrWhiteSpace(value)) continue;
+                string candidate = value.Trim().Trim('"').Split(',')[0];
+                yield return Path.GetFileName(candidate).Equals("VeraCrypt.exe", StringComparison.OrdinalIgnoreCase)
+                    ? candidate
+                    : Path.Combine(candidate, "VeraCrypt.exe");
+            }
+        }
+    }
+
+    private static IEnumerable<string> GetPathCandidates()
+    {
+        string? pathValue = Environment.GetEnvironmentVariable("PATH");
+        if (string.IsNullOrWhiteSpace(pathValue)) yield break;
+        foreach (string directory in pathValue.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            yield return Path.Combine(directory, "VeraCrypt.exe");
+        }
     }
 }
