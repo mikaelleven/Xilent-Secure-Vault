@@ -1,6 +1,6 @@
 # Xilent Vault Agent
 
-Windows-only personal vault helper for a VeraCrypt Vault and Xilent Key Deriver V1. It reads an existing 48-byte binary `.mkf` file, combines its 32-byte key material and 16-byte salt with a manually entered Hx memory secret and info string, then copies the resulting 64-character lowercase hexadecimal key to the clipboard.
+Windows-only vault helper for a VeraCrypt Vault and Xilent Key Deriver V1. It reads an existing 48-byte binary `.mkf` file, combines its 32-byte key material and 16-byte salt with a manually entered Hx memory secret and info string, then copies the resulting 64-character lowercase hexadecimal key to the clipboard.
 
 ## Requirements
 
@@ -11,15 +11,15 @@ Windows-only personal vault helper for a VeraCrypt Vault and Xilent Key Deriver 
 
 ## Initial Vault setup
 
-1. Create the marker file at the root of the mounted Vault, for example `Q:\.Xilent-vault`.
+1. Create the marker file at the root of the mounted Vault, for example `<drive>:\.Xilent-vault`.
 2. Its entire content must be exactly `Xilent-VAULT-1`, with no added newline.
-3. Put the binary 48-byte `.mkf` files in `Q:\Keys` or change the relative directory in Settings.
+3. Put the binary 48-byte `.mkf` files in `<drive>:\Keys` or change the relative directory in Settings.
 4. Open Settings from the tray icon and select VeraCrypt, the container, and NF1. The application stores those two paths as Base64 UTF-8 only; this is obfuscation, not encryption.
 5. Keep H1 out of the application. VeraCrypt prompts for it normally and you paste it manually.
 
 ## Use
 
-Alpha 1 functionality works with a manually mounted Vault: open the form, choose an `.mkf`, enter Hx and the exact info string, then press Enter or **Derive and Copy**. The Hx field is cleared immediately. The application clears the clipboard only if it still contains the same copied key after the configured timeout.
+Alpha 1 functionality works with a manually mounted Vault: open the form, choose an `.mkf`, enter Hx and the exact info string, then press Enter or **Derive and Copy**. The Hx field is cleared immediately. Clipboard cleanup is described below.
 
 Alpha 2 runs in the system tray. Double-clicking the icon or choosing **Unlock Data Key** mounts the Vault when needed, waits for its exact marker file, then opens the derivation form. The tray menu also mounts, unmounts, opens the MKF directory, opens Settings, and exits. Red means locked, green means validated mounted Vault, and yellow means an error or another volume at the configured drive letter.
 
@@ -82,7 +82,17 @@ Only one instance runs. Later launches send the selected action to it, which mak
 
 ## Security limits
 
-The app does not store H1, Hx, info strings, `.mkf` contents, final keys, or clipboard plaintext after copying. It does not use a VeraCrypt password command-line argument. Clipboard exposure is reduced, not eliminated; disable clipboard history, cloud clipboard, and third-party clipboard managers where possible. A fully compromised trusted computer is outside this tool's protection model.
+The app does not store H1, Hx, info strings, `.mkf` contents, final keys, or clipboard plaintext after copying. A fully compromised trusted computer is outside this tool's protection model.
+
+### VeraCrypt command-line handling
+
+The application deliberately does not call VeraCrypt with H1, NF1, or any other secret or sensitive information as command-line arguments. Process arguments can be captured by diagnostic tools, crash reports, process monitoring, shell history, or security and audit logs. Those logs may be retained or scanned by other software, so passing a secret on the command line would create an unnecessary copy outside VeraCrypt's protected password dialog. VeraCrypt prompts for H1 normally, and the user enters it there.
+
+### Clipboard cleanup
+
+After copying a derived key, the application requests Windows clipboard metadata that discourages clipboard-history and cloud-sync processing where supported. It records only a SHA-256 digest of the copied value, not the value itself, and starts the configured cleanup timer. When the timer expires, it reads the current Unicode clipboard text and clears the clipboard only when its digest still matches the copied key. This avoids deleting newer content that the user or another application placed on the clipboard. The tracked digest and timer state are then discarded and the digest buffer is zeroed.
+
+This reduces exposure but is not a perfect or guaranteed erasure mechanism. Clipboard managers, history, cloud synchronization, screenshots, other processes, memory snapshots, or failures while the clipboard is locked may retain the key. Disable clipboard history, cloud clipboard, and third-party clipboard managers where possible, and treat the clipboard as exposed while the key is present.
 
 See [Architecture](docs/Architecture.md), [Security model](docs/SecurityModel.md), and [Alpha 3 design](docs/Alpha3.md).
 

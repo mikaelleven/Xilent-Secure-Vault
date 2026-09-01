@@ -100,7 +100,7 @@ For the memorized secret, a password manager such as [Bitwarden](https://bitward
 
 The **XVault** application is optional but recommended when available. It simplifies day-to-day Vault management, key creation, derivation, and configuration.
 
-If you use XVault, configure the Vault device with an `.xvault` configuration file so the application can identify and work with the intended Vault setup. See [README_App.md](README_App.md) for application and configuration details.
+If you use XVault, configure the Vault device with an `.xvault` configuration file so the application can identify and work with the intended Vault setup. See [XVAULT_README.md](XVAULT_README.md) for application and configuration details.
 
 ### Step 3 — Create Master Keys
 
