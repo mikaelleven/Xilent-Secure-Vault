@@ -1,6 +1,7 @@
 # Xilent Secure Vault (XSV)
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![Status: W.I.P. / Pre-alpha](https://img.shields.io/badge/status-W.I.P.%20%2F%20pre--alpha-orange)](#limitations)
 
 ![XSV USB Vault structure](docs/images/xsv-usb-vault.png)
 
