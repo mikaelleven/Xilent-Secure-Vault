@@ -1,5 +1,7 @@
 # Xilent Secure Vault (XSV)
 
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
 ![XSV USB Vault structure](docs/images/xsv-usb-vault.png)
 
 ## 1. Secure Storage Without Unnecessary Complexity
@@ -167,3 +169,7 @@ It may not protect you adequately against:
 - Operational mistakes, such as mounting the real Vault on an untrusted computer.
 
 Use dedicated, trusted devices where possible, protect paper recovery copies carefully, and review your setup periodically.
+
+## 5. License
+
+XSV source code, documentation, diagrams, and configuration examples are licensed under the [Apache License 2.0](LICENSE). See [NOTICE](NOTICE) for attribution information.
