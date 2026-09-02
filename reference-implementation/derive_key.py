@@ -20,6 +20,7 @@ import hmac
 import re
 import secrets
 import unicodedata
+from dataclasses import dataclass
 from getpass import getpass
 from pathlib import Path
 
@@ -35,6 +36,32 @@ PASSWORD_SALT_PREFIX = b"XILENT-PBKDF2-V1\0"
 HKDF_SALT_PREFIX = b"XILENT-HKDF-V1\0"
 HKDF_INFO_PREFIX = b"XILENT-KEY-V1\0"
 INFO_STRING_PATTERN = re.compile(r"^[a-z0-9][a-z0-9:._-]{0,127}$", re.ASCII)
+
+
+@dataclass
+class TestVector:
+    """One shared XILENT-KEY-V1 interoperability vector."""
+
+    master_key_file_hex: str
+    memorized_secret: str
+    info_string: str
+    expected_derived_key: str
+
+
+def load_test_vectors(vector_path: Path) -> list[TestVector]:
+    """Read the shared JSON vectors into named values."""
+
+    raw_vectors = json.loads(vector_path.read_text(encoding="utf-8"))
+    vectors: list[TestVector] = []
+    for raw_vector in raw_vectors:
+        vector = TestVector(
+            master_key_file_hex=raw_vector["mkfHex"],
+            memorized_secret=raw_vector["memorySecret"],
+            info_string=raw_vector["info"],
+            expected_derived_key=raw_vector["expected"],
+        )
+        vectors.append(vector)
+    return vectors
 
 
 def derive_key_from_master_key_file(
@@ -176,7 +203,7 @@ def verify_public_test_vector() -> None:
 def write_test_vectors_markdown(vector_path: Path, markdown_path: Path) -> None:
     """Export the shared JSON vectors as readable, non-secret documentation."""
 
-    vectors = json.loads(vector_path.read_text(encoding="utf-8"))
+    vectors = load_test_vectors(vector_path)
     lines = [
         "# XILENT-KEY-V1 Reference Test Vectors",
         "",
@@ -188,9 +215,9 @@ def write_test_vectors_markdown(vector_path: Path, markdown_path: Path) -> None:
     ]
     for index, vector in enumerate(vectors, start=1):
         lines.append(
-            f"| {index} | `{vector['mkfHex']}` | "
-            f"`{vector['memorySecret']}` | `{vector['info']}` | "
-            f"`{vector['expected']}` |"
+            f"| {index} | `{vector.master_key_file_hex}` | "
+            f"`{vector.memorized_secret}` | `{vector.info_string}` | "
+            f"`{vector.expected_derived_key}` |"
         )
     lines.extend([
         "",
@@ -212,7 +239,7 @@ def write_test_vectors_markdown(vector_path: Path, markdown_path: Path) -> None:
 def verify_test_vectors(vector_path: Path) -> bool:
     """Verify every vector shared with the C# test project."""
 
-    vectors = json.loads(vector_path.read_text(encoding="utf-8"))
+    vectors = load_test_vectors(vector_path)
     print("=== XILENT-KEY-V1 Reference Verification ===")
     print("Expected derived key: listed per vector below.")
     print(f"Prefixes: pws={PASSWORD_SALT_PREFIX!r}, hkdf={HKDF_SALT_PREFIX!r}, info={HKDF_INFO_PREFIX!r}")
@@ -221,14 +248,18 @@ def verify_test_vectors(vector_path: Path) -> bool:
     print()
     all_passed = True
     for index, vector in enumerate(vectors, start=1):
+        master_key_file_contents = bytes.fromhex(vector.master_key_file_hex)
         actual = derive_key_from_master_key_bytes(
-            bytes.fromhex(vector["mkfHex"]), vector["memorySecret"], vector["info"]
+            master_key_file_contents,
+            vector.memorized_secret,
+            vector.info_string,
         )
-        passed = secrets.compare_digest(actual, vector["expected"])
-        all_passed = all_passed and passed
+        passed = secrets.compare_digest(actual, vector.expected_derived_key)
+        if not passed:
+            all_passed = False
         result = "PASS" if passed else "FAIL"
-        print(f"{result} vector {index} ({vector['info']})")
-        print(f"  expected derived key: {vector['expected']}")
+        print(f"{result} vector {index} ({vector.info_string})")
+        print(f"  expected derived key: {vector.expected_derived_key}")
         print(f"  generated derived key: {actual}")
     print(f"\nOverall result: {'PASS' if all_passed else 'FAIL'}")
     return all_passed
