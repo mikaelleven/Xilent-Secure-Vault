@@ -124,6 +124,16 @@ The intended recovery path is deliberately simple:
 
 This is a practical trade-off. XSV favors security that can realistically be operated and recovered by a private individual or family over maximum theoretical resistance at any cost.
 
+### Reference Implementations and Recovery Documentation
+
+The [`reference-implementation`](reference-implementation/) directory is the compatibility reference for the `XILENT-KEY-V1` derived-key algorithm. It includes:
+
+- A language-neutral [pseudo-code specification](reference-implementation/derived-key-pseudocode.md) and detailed [recovery walkthrough](reference-implementation/derived-key-walkthrough.md).
+- Readable reference implementations in [Python](reference-implementation/derive_key.py), [C#](reference-implementation/derive_key.cs), [C# script](reference-implementation/derive_key.csx), and [TypeScript](reference-implementation/derive_key.ts).
+- Public [test vectors](reference-implementation/reference-test-vectors.md) for independently verifying a compatible implementation.
+
+These files document the exact inputs, encodings, parameters, and output format needed to recreate a derived key in the future.
+
 ### Three-Factor Protection
 
 A typical XSV setup combines three separate factors:
